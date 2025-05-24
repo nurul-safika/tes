@@ -1,0 +1,985 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Portfolio Manager</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: #f0f4f8;
+            transition: background-color 0.5s ease;
+        }
+        
+        .admin-mode {
+            background-color: #f0f4f8;
+        }
+        
+        .user-mode {
+            background-color: #f8f0ff;
+        }
+        
+        .card {
+            transition: all 0.3s ease;
+        }
+        
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+        }
+        
+        .btn {
+            transition: all 0.2s ease;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .toggle-checkbox:checked {
+            right: 0;
+            border-color: #68D391;
+        }
+        
+        .toggle-checkbox:checked + .toggle-label {
+            background-color: #68D391;
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in {
+            animation: slideIn 0.5s ease-in-out;
+        }
+        
+        @keyframes slideIn {
+            from { transform: translateX(-20px); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .modal {
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        
+        .modal-enter {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        
+        .modal-enter-active {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .modal-exit {
+            opacity: 1;
+            transform: scale(1);
+        }
+        
+        .modal-exit-active {
+            opacity: 0;
+            transform: scale(0.9);
+        }
+        
+        .portfolio-item {
+            transition: all 0.3s ease;
+        }
+        
+        .portfolio-item:hover {
+            transform: scale(1.02);
+        }
+        
+        .delete-animation {
+            animation: deleteAnim 0.5s ease-in-out;
+        }
+        
+        @keyframes deleteAnim {
+            0% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.05); opacity: 0.5; }
+            100% { transform: scale(0); opacity: 0; }
+        }
+        
+        .add-animation {
+            animation: addAnim 0.5s ease-in-out;
+        }
+        
+        @keyframes addAnim {
+            0% { transform: scale(0); opacity: 0; }
+            70% { transform: scale(1.05); opacity: 0.7; }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        
+        .shake {
+            animation: shake 0.5s ease-in-out;
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-5px); }
+            40%, 80% { transform: translateX(5px); }
+        }
+        
+        .pulse {
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body class="admin-mode min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header with Mode Toggle -->
+        <div class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800 slide-in" id="app-title">Portfolio Manager</h1>
+            
+            <div class="flex items-center space-x-3">
+                <span class="text-sm font-medium text-gray-700" id="mode-label">Admin Mode</span>
+                <div class="relative inline-block w-14 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="mode-toggle" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                    <label for="mode-toggle" class="toggle-label block overflow-hidden h-6 rounded-full bg-gray-300 cursor-pointer"></label>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Admin Controls (visible only in admin mode) -->
+        <div id="admin-controls" class="mb-8 fade-in">
+            <div class="bg-white rounded-lg shadow-md p-6">
+                <h2 class="text-xl font-semibold mb-4 text-gray-800">Add New Portfolio Item</h2>
+                <form id="portfolio-form" class="space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
+                            <input type="text" id="project-title" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="project-category" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="Web Development">Web Development</option>
+                                <option value="Mobile App">Mobile App</option>
+                                <option value="UI/UX Design">UI/UX Design</option>
+                                <option value="Graphic Design">Graphic Design</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="project-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                            <input type="text" id="project-client" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Completion Date</label>
+                            <input type="date" id="project-date" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                    
+                    <div class="flex justify-end">
+                        <button type="submit" class="btn bg-indigo-600 hover:bg-indigo-700 text-white font-medium py-2 px-6 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
+                            <i class="fas fa-plus mr-2"></i> Add Project
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+        
+        <!-- View Toggle -->
+        <div class="flex justify-between items-center mb-6">
+            <h2 class="text-2xl font-semibold text-gray-800 slide-in">Portfolio Items</h2>
+            <div class="flex space-x-2">
+                <button id="grid-view-btn" class="btn bg-indigo-600 text-white px-4 py-2 rounded-md">
+                    <i class="fas fa-th"></i>
+                </button>
+                <button id="table-view-btn" class="btn bg-gray-200 text-gray-700 px-4 py-2 rounded-md">
+                    <i class="fas fa-list"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Search and Filter -->
+        <div class="mb-6 bg-white p-4 rounded-lg shadow-sm fade-in">
+            <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                <div class="relative flex-grow">
+                    <input type="text" id="search-input" placeholder="Search projects..." class="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                        <i class="fas fa-search text-gray-400"></i>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <select id="filter-category" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="">All Categories</option>
+                        <option value="Web Development">Web Development</option>
+                        <option value="Mobile App">Mobile App</option>
+                        <option value="UI/UX Design">UI/UX Design</option>
+                        <option value="Graphic Design">Graphic Design</option>
+                        <option value="Other">Other</option>
+                    </select>
+                    <select id="sort-by" class="px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        <option value="newest">Newest First</option>
+                        <option value="oldest">Oldest First</option>
+                        <option value="name-asc">Name (A-Z)</option>
+                        <option value="name-desc">Name (Z-A)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Grid View (Default) -->
+        <div id="grid-view" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            <!-- Portfolio items will be dynamically added here -->
+        </div>
+        
+        <!-- Table View (Hidden by default) -->
+        <div id="table-view" class="overflow-x-auto bg-white rounded-lg shadow-md hidden">
+            <table class="min-w-full divide-y divide-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Project</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Client</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                        <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="bg-white divide-y divide-gray-200" id="table-body">
+                    <!-- Table rows will be dynamically added here -->
+                </tbody>
+            </table>
+        </div>
+        
+        <!-- Pagination -->
+        <div class="flex justify-center mt-8">
+            <nav class="inline-flex rounded-md shadow-sm">
+                <button class="px-3 py-1 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-chevron-left"></i>
+                </button>
+                <button class="px-3 py-1 border-t border-b border-gray-300 bg-indigo-50 text-indigo-600">1</button>
+                <button class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">2</button>
+                <button class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-500 hover:bg-gray-50">3</button>
+                <button class="px-3 py-1 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50">
+                    <i class="fas fa-chevron-right"></i>
+                </button>
+            </nav>
+        </div>
+    </div>
+    
+    <!-- Edit Modal -->
+    <div id="edit-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-2xl mx-4 modal modal-enter">
+            <div class="flex justify-between items-center border-b px-6 py-4">
+                <h3 class="text-xl font-semibold text-gray-800">Edit Portfolio Item</h3>
+                <button id="close-edit-modal" class="text-gray-400 hover:text-gray-500">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-6">
+                <form id="edit-form" class="space-y-4">
+                    <input type="hidden" id="edit-id">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Project Title</label>
+                            <input type="text" id="edit-title" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required>
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Category</label>
+                            <select id="edit-category" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                                <option value="Web Development">Web Development</option>
+                                <option value="Mobile App">Mobile App</option>
+                                <option value="UI/UX Design">UI/UX Design</option>
+                                <option value="Graphic Design">Graphic Design</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 mb-1">Description</label>
+                        <textarea id="edit-description" rows="3" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500" required></textarea>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Client</label>
+                            <input type="text" id="edit-client" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Completion Date</label>
+                            <input type="date" id="edit-date" class="w-full px-4 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="border-t px-6 py-4 flex justify-end space-x-4">
+                <button id="cancel-edit" class="btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                    Cancel
+                </button>
+                <button id="save-edit" class="btn px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700">
+                    Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Delete Confirmation Modal -->
+    <div id="delete-modal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 hidden">
+        <div class="bg-white rounded-lg shadow-xl w-full max-w-md mx-4 modal modal-enter">
+            <div class="p-6">
+                <div class="flex items-center justify-center mb-4">
+                    <div class="bg-red-100 rounded-full p-3">
+                        <i class="fas fa-exclamation-triangle text-red-500 text-xl"></i>
+                    </div>
+                </div>
+                <h3 class="text-xl font-semibold text-gray-800 text-center mb-2">Delete Portfolio Item</h3>
+                <p class="text-gray-600 text-center mb-6">Are you sure you want to delete this item? This action cannot be undone.</p>
+                <input type="hidden" id="delete-id">
+                <div class="flex justify-center space-x-4">
+                    <button id="cancel-delete" class="btn px-4 py-2 border border-gray-300 rounded-md text-gray-700 bg-white hover:bg-gray-50">
+                        Cancel
+                    </button>
+                    <button id="confirm-delete" class="btn px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700">
+                        Delete
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed bottom-4 right-4 bg-gray-800 text-white px-6 py-3 rounded-md shadow-lg transform transition-all duration-300 translate-y-20 opacity-0 flex items-center">
+        <span id="toast-icon" class="mr-2"><i class="fas fa-check-circle"></i></span>
+        <span id="toast-message">Operation successful!</span>
+    </div>
+
+    <script>
+        // Sample data
+        let portfolioItems = [
+            {
+                id: 1,
+                title: "E-commerce Website Redesign",
+                category: "Web Development",
+                description: "Complete redesign of an e-commerce platform with improved user experience and mobile responsiveness.",
+                client: "Fashion Boutique Inc.",
+                date: "2023-05-15",
+                color: "indigo"
+            },
+            {
+                id: 2,
+                title: "Health & Fitness Mobile App",
+                category: "Mobile App",
+                description: "A comprehensive fitness tracking application with workout plans, nutrition tracking, and progress analytics.",
+                client: "FitLife Solutions",
+                date: "2023-03-22",
+                color: "green"
+            },
+            {
+                id: 3,
+                title: "Corporate Brand Identity",
+                category: "Graphic Design",
+                description: "Development of complete brand identity including logo, color palette, typography, and brand guidelines.",
+                client: "TechNova Systems",
+                date: "2023-07-10",
+                color: "purple"
+            },
+            {
+                id: 4,
+                title: "Restaurant Ordering System",
+                category: "Web Development",
+                description: "Online ordering system with real-time kitchen notifications and delivery tracking.",
+                client: "Gourmet Eats",
+                date: "2023-02-18",
+                color: "red"
+            },
+            {
+                id: 5,
+                title: "Travel Booking Platform UX",
+                category: "UI/UX Design",
+                description: "User experience design for a travel booking platform focusing on simplifying the booking process.",
+                client: "Wanderlust Travels",
+                date: "2023-06-05",
+                color: "blue"
+            }
+        ];
+        
+        // DOM Elements
+        const modeToggle = document.getElementById('mode-toggle');
+        const modeLabel = document.getElementById('mode-label');
+        const appTitle = document.getElementById('app-title');
+        const adminControls = document.getElementById('admin-controls');
+        const portfolioForm = document.getElementById('portfolio-form');
+        const gridView = document.getElementById('grid-view');
+        const tableView = document.getElementById('table-view');
+        const tableBody = document.getElementById('table-body');
+        const gridViewBtn = document.getElementById('grid-view-btn');
+        const tableViewBtn = document.getElementById('table-view-btn');
+        const searchInput = document.getElementById('search-input');
+        const filterCategory = document.getElementById('filter-category');
+        const sortBy = document.getElementById('sort-by');
+        const editModal = document.getElementById('edit-modal');
+        const closeEditModal = document.getElementById('close-edit-modal');
+        const cancelEdit = document.getElementById('cancel-edit');
+        const saveEdit = document.getElementById('save-edit');
+        const deleteModal = document.getElementById('delete-modal');
+        const cancelDelete = document.getElementById('cancel-delete');
+        const confirmDelete = document.getElementById('confirm-delete');
+        const toast = document.getElementById('toast');
+        
+        // Color mapping for categories
+        const categoryColors = {
+            "Web Development": "indigo",
+            "Mobile App": "green",
+            "UI/UX Design": "blue",
+            "Graphic Design": "purple",
+            "Other": "gray"
+        };
+        
+        // Initialize the app
+        function init() {
+            renderPortfolioItems();
+            setupEventListeners();
+        }
+        
+        // Render portfolio items in both grid and table views
+        function renderPortfolioItems() {
+            renderGridView();
+            renderTableView();
+        }
+        
+        // Render grid view
+        function renderGridView() {
+            gridView.innerHTML = '';
+            
+            if (portfolioItems.length === 0) {
+                gridView.innerHTML = `
+                    <div class="col-span-full flex flex-col items-center justify-center py-12 text-gray-500">
+                        <i class="fas fa-folder-open text-5xl mb-4"></i>
+                        <p class="text-xl">No portfolio items found</p>
+                        <p class="mt-2">Add your first project to get started</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            portfolioItems.forEach(item => {
+                const colorClass = `bg-${item.color}-100 text-${item.color}-800 border-${item.color}-200`;
+                const card = document.createElement('div');
+                card.className = `portfolio-item bg-white rounded-lg shadow-md overflow-hidden fade-in`;
+                card.dataset.id = item.id;
+                
+                card.innerHTML = `
+                    <div class="relative">
+                        <div class="h-48 bg-gradient-to-r from-${item.color}-500 to-${item.color}-600 flex items-center justify-center">
+                            <i class="fas ${getCategoryIcon(item.category)} text-white text-5xl"></i>
+                        </div>
+                        <div class="absolute top-4 right-4">
+                            <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${colorClass}">
+                                ${item.category}
+                            </span>
+                        </div>
+                    </div>
+                    <div class="p-6">
+                        <h3 class="text-xl font-semibold text-gray-800 mb-2">${item.title}</h3>
+                        <p class="text-gray-600 mb-4 line-clamp-3">${item.description}</p>
+                        <div class="flex justify-between items-center text-sm text-gray-500">
+                            <span><i class="fas fa-user mr-1"></i> ${item.client}</span>
+                            <span><i class="fas fa-calendar mr-1"></i> ${formatDate(item.date)}</span>
+                        </div>
+                        <div class="mt-4 pt-4 border-t border-gray-100 flex justify-between">
+                            <button class="view-details-btn btn text-${item.color}-600 hover:text-${item.color}-800">
+                                <i class="fas fa-eye mr-1"></i> View Details
+                            </button>
+                            <div class="admin-only hidden">
+                                <button class="edit-btn btn text-blue-600 hover:text-blue-800 mr-2">
+                                    <i class="fas fa-edit"></i>
+                                </button>
+                                <button class="delete-btn btn text-red-600 hover:text-red-800">
+                                    <i class="fas fa-trash-alt"></i>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                gridView.appendChild(card);
+            });
+            
+            updateAdminControls();
+        }
+        
+        // Render table view
+        function renderTableView() {
+            tableBody.innerHTML = '';
+            
+            if (portfolioItems.length === 0) {
+                const emptyRow = document.createElement('tr');
+                emptyRow.innerHTML = `
+                    <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                        <i class="fas fa-folder-open text-4xl mb-3"></i>
+                        <p class="text-lg">No portfolio items found</p>
+                    </td>
+                `;
+                tableBody.appendChild(emptyRow);
+                return;
+            }
+            
+            portfolioItems.forEach(item => {
+                const colorClass = `bg-${item.color}-100 text-${item.color}-800`;
+                const row = document.createElement('tr');
+                row.className = 'hover:bg-gray-50 transition-colors';
+                row.dataset.id = item.id;
+                
+                row.innerHTML = `
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <div class="flex items-center">
+                            <div class="flex-shrink-0 h-10 w-10 rounded-full ${colorClass} flex items-center justify-center">
+                                <i class="fas ${getCategoryIcon(item.category)}"></i>
+                            </div>
+                            <div class="ml-4">
+                                <div class="text-sm font-medium text-gray-900">${item.title}</div>
+                                <div class="text-sm text-gray-500 truncate max-w-xs">${item.description.substring(0, 60)}${item.description.length > 60 ? '...' : ''}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full ${colorClass}">
+                            ${item.category}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${item.client}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        ${formatDate(item.date)}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                        <button class="view-details-btn text-indigo-600 hover:text-indigo-900 mr-3">
+                            <i class="fas fa-eye"></i>
+                        </button>
+                        <span class="admin-only hidden">
+                            <button class="edit-btn text-blue-600 hover:text-blue-900 mr-3">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button class="delete-btn text-red-600 hover:text-red-900">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        </span>
+                    </td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            updateAdminControls();
+        }
+        
+        // Setup event listeners
+        function setupEventListeners() {
+            // Mode toggle
+            modeToggle.addEventListener('change', toggleMode);
+            
+            // View toggle
+            gridViewBtn.addEventListener('click', () => {
+                gridView.classList.remove('hidden');
+                tableView.classList.add('hidden');
+                gridViewBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                gridViewBtn.classList.add('bg-indigo-600', 'text-white');
+                tableViewBtn.classList.remove('bg-indigo-600', 'text-white');
+                tableViewBtn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            tableViewBtn.addEventListener('click', () => {
+                gridView.classList.add('hidden');
+                tableView.classList.remove('hidden');
+                tableViewBtn.classList.remove('bg-gray-200', 'text-gray-700');
+                tableViewBtn.classList.add('bg-indigo-600', 'text-white');
+                gridViewBtn.classList.remove('bg-indigo-600', 'text-white');
+                gridViewBtn.classList.add('bg-gray-200', 'text-gray-700');
+            });
+            
+            // Form submission
+            portfolioForm.addEventListener('submit', handleFormSubmit);
+            
+            // Search and filter
+            searchInput.addEventListener('input', filterItems);
+            filterCategory.addEventListener('change', filterItems);
+            sortBy.addEventListener('change', filterItems);
+            
+            // Edit modal
+            closeEditModal.addEventListener('click', () => closeModal(editModal));
+            cancelEdit.addEventListener('click', () => closeModal(editModal));
+            saveEdit.addEventListener('click', handleEditSave);
+            
+            // Delete modal
+            cancelDelete.addEventListener('click', () => closeModal(deleteModal));
+            confirmDelete.addEventListener('click', handleDeleteConfirm);
+            
+            // Delegate event listeners for dynamic buttons
+            document.addEventListener('click', function(e) {
+                // Edit button
+                if (e.target.closest('.edit-btn')) {
+                    const id = parseInt(e.target.closest('[data-id]').dataset.id);
+                    openEditModal(id);
+                }
+                
+                // Delete button
+                if (e.target.closest('.delete-btn')) {
+                    const id = parseInt(e.target.closest('[data-id]').dataset.id);
+                    openDeleteModal(id);
+                }
+                
+                // View details button
+                if (e.target.closest('.view-details-btn')) {
+                    const id = parseInt(e.target.closest('[data-id]').dataset.id);
+                    viewDetails(id);
+                }
+            });
+        }
+        
+        // Toggle between admin and user modes
+        function toggleMode() {
+            const body = document.body;
+            
+            if (modeToggle.checked) {
+                body.classList.remove('admin-mode');
+                body.classList.add('user-mode');
+                modeLabel.textContent = 'User Mode';
+                adminControls.classList.add('hidden');
+                appTitle.textContent = 'Portfolio Showcase';
+            } else {
+                body.classList.remove('user-mode');
+                body.classList.add('admin-mode');
+                modeLabel.textContent = 'Admin Mode';
+                adminControls.classList.remove('hidden');
+                appTitle.textContent = 'Portfolio Manager';
+            }
+            
+            updateAdminControls();
+        }
+        
+        // Update visibility of admin controls based on current mode
+        function updateAdminControls() {
+            const adminElements = document.querySelectorAll('.admin-only');
+            const isAdmin = !modeToggle.checked;
+            
+            adminElements.forEach(el => {
+                if (isAdmin) {
+                    el.classList.remove('hidden');
+                } else {
+                    el.classList.add('hidden');
+                }
+            });
+        }
+        
+        // Handle form submission for new portfolio item
+        function handleFormSubmit(e) {
+            e.preventDefault();
+            
+            const title = document.getElementById('project-title').value;
+            const category = document.getElementById('project-category').value;
+            const description = document.getElementById('project-description').value;
+            const client = document.getElementById('project-client').value;
+            const date = document.getElementById('project-date').value;
+            
+            const newItem = {
+                id: Date.now(),
+                title,
+                category,
+                description,
+                client,
+                date,
+                color: getCategoryColor(category)
+            };
+            
+            portfolioItems.unshift(newItem);
+            
+            // Clear form
+            portfolioForm.reset();
+            
+            // Re-render with animation
+            renderPortfolioItems();
+            
+            // Add animation to the new item
+            setTimeout(() => {
+                const newGridItem = document.querySelector(`#grid-view [data-id="${newItem.id}"]`);
+                if (newGridItem) {
+                    newGridItem.classList.add('add-animation');
+                }
+                
+                const newTableItem = document.querySelector(`#table-body [data-id="${newItem.id}"]`);
+                if (newTableItem) {
+                    newTableItem.classList.add('add-animation');
+                }
+            }, 100);
+            
+            showToast('Project added successfully!', 'success');
+        }
+        
+        // Filter and sort items
+        function filterItems() {
+            const searchTerm = searchInput.value.toLowerCase();
+            const categoryFilter = filterCategory.value;
+            const sortOption = sortBy.value;
+            
+            let filtered = [...portfolioItems];
+            
+            // Apply search filter
+            if (searchTerm) {
+                filtered = filtered.filter(item => 
+                    item.title.toLowerCase().includes(searchTerm) || 
+                    item.description.toLowerCase().includes(searchTerm) ||
+                    item.client.toLowerCase().includes(searchTerm) ||
+                    item.category.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            // Apply category filter
+            if (categoryFilter) {
+                filtered = filtered.filter(item => item.category === categoryFilter);
+            }
+            
+            // Apply sorting
+            switch (sortOption) {
+                case 'newest':
+                    filtered.sort((a, b) => new Date(b.date) - new Date(a.date));
+                    break;
+                case 'oldest':
+                    filtered.sort((a, b) => new Date(a.date) - new Date(b.date));
+                    break;
+                case 'name-asc':
+                    filtered.sort((a, b) => a.title.localeCompare(b.title));
+                    break;
+                case 'name-desc':
+                    filtered.sort((a, b) => b.title.localeCompare(a.title));
+                    break;
+            }
+            
+            // Store original items and replace with filtered
+            const originalItems = portfolioItems;
+            portfolioItems = filtered;
+            
+            // Render with filtered items
+            renderPortfolioItems();
+            
+            // Restore original items
+            portfolioItems = originalItems;
+        }
+        
+        // Open edit modal
+        function openEditModal(id) {
+            const item = portfolioItems.find(item => item.id === id);
+            if (!item) return;
+            
+            document.getElementById('edit-id').value = item.id;
+            document.getElementById('edit-title').value = item.title;
+            document.getElementById('edit-category').value = item.category;
+            document.getElementById('edit-description').value = item.description;
+            document.getElementById('edit-client').value = item.client;
+            document.getElementById('edit-date').value = item.date;
+            
+            openModal(editModal);
+        }
+        
+        // Handle edit save
+        function handleEditSave() {
+            const id = parseInt(document.getElementById('edit-id').value);
+            const title = document.getElementById('edit-title').value;
+            const category = document.getElementById('edit-category').value;
+            const description = document.getElementById('edit-description').value;
+            const client = document.getElementById('edit-client').value;
+            const date = document.getElementById('edit-date').value;
+            
+            const index = portfolioItems.findIndex(item => item.id === id);
+            if (index !== -1) {
+                portfolioItems[index] = {
+                    ...portfolioItems[index],
+                    title,
+                    category,
+                    description,
+                    client,
+                    date,
+                    color: getCategoryColor(category)
+                };
+                
+                closeModal(editModal);
+                renderPortfolioItems();
+                
+                // Add animation to the edited item
+                setTimeout(() => {
+                    const editedGridItem = document.querySelector(`#grid-view [data-id="${id}"]`);
+                    if (editedGridItem) {
+                        editedGridItem.classList.add('pulse');
+                    }
+                    
+                    const editedTableItem = document.querySelector(`#table-body [data-id="${id}"]`);
+                    if (editedTableItem) {
+                        editedTableItem.classList.add('pulse');
+                    }
+                }, 100);
+                
+                showToast('Project updated successfully!', 'success');
+            }
+        }
+        
+        // Open delete modal
+        function openDeleteModal(id) {
+            document.getElementById('delete-id').value = id;
+            openModal(deleteModal);
+        }
+        
+        // Handle delete confirmation
+        function handleDeleteConfirm() {
+            const id = parseInt(document.getElementById('delete-id').value);
+            
+            // Add delete animation before actual deletion
+            const gridItem = document.querySelector(`#grid-view [data-id="${id}"]`);
+            if (gridItem) {
+                gridItem.classList.add('delete-animation');
+            }
+            
+            const tableItem = document.querySelector(`#table-body [data-id="${id}"]`);
+            if (tableItem) {
+                tableItem.classList.add('delete-animation');
+            }
+            
+            // Delete after animation completes
+            setTimeout(() => {
+                portfolioItems = portfolioItems.filter(item => item.id !== id);
+                closeModal(deleteModal);
+                renderPortfolioItems();
+                showToast('Project deleted successfully!', 'warning');
+            }, 500);
+        }
+        
+        // View details of a portfolio item
+        function viewDetails(id) {
+            const item = portfolioItems.find(item => item.id === id);
+            if (!item) return;
+            
+            // For now, just show a toast with the item title
+            showToast(`Viewing: ${item.title}`, 'info');
+            
+            // In a real app, you might open a detailed view or navigate to a details page
+        }
+        
+        // Helper function to open modal with animation
+        function openModal(modal) {
+            modal.classList.remove('hidden');
+            const modalContent = modal.querySelector('.modal');
+            modalContent.classList.remove('modal-enter');
+            
+            // Force reflow
+            void modalContent.offsetWidth;
+            
+            modalContent.classList.add('modal-enter-active');
+        }
+        
+        // Helper function to close modal with animation
+        function closeModal(modal) {
+            const modalContent = modal.querySelector('.modal');
+            modalContent.classList.remove('modal-enter-active');
+            modalContent.classList.add('modal-exit');
+            
+            setTimeout(() => {
+                modal.classList.add('hidden');
+                modalContent.classList.remove('modal-exit');
+                modalContent.classList.add('modal-enter');
+            }, 300);
+        }
+        
+        // Show toast notification
+        function showToast(message, type = 'success') {
+            const toastIcon = document.getElementById('toast-icon');
+            const toastMessage = document.getElementById('toast-message');
+            
+            // Set icon and color based on type
+            switch (type) {
+                case 'success':
+                    toastIcon.innerHTML = '<i class="fas fa-check-circle"></i>';
+                    toast.className = 'fixed bottom-4 right-4 bg-green-600 text-white px-6 py-3 rounded-md shadow-lg transform transition-all duration-300 flex items-center';
+                    break;
+                case 'warning':
+                    toastIcon.innerHTML = '<i class="fas fa-exclamation-circle"></i>';
+                    toast.className = 'fixed bottom-4 right-4 bg-amber-600 text-white px-6 py-3 rounded-md shadow-lg transform transition-all duration-300 flex items-center';
+                    break;
+                case 'error':
+                    toastIcon.innerHTML = '<i class="fas fa-times-circle"></i>';
+                    toast.className = 'fixed bottom-4 right-4 bg-red-600 text-white px-6 py-3 rounded-md shadow-lg transform transition-all duration-300 flex items-center';
+                    break;
+                case 'info':
+                    toastIcon.innerHTML = '<i class="fas fa-info-circle"></i>';
+                    toast.className = 'fixed bottom-4 right-4 bg-blue-600 text-white px-6 py-3 rounded-md shadow-lg transform transition-all duration-300 flex items-center';
+                    break;
+            }
+            
+            toastMessage.textContent = message;
+            
+            // Show toast
+            toast.classList.remove('translate-y-20', 'opacity-0');
+            
+            // Hide toast after 3 seconds
+            setTimeout(() => {
+                toast.classList.add('translate-y-20', 'opacity-0');
+            }, 3000);
+        }
+        
+        // Helper function to format date
+        function formatDate(dateString) {
+            if (!dateString) return 'N/A';
+            
+            const date = new Date(dateString);
+            return date.toLocaleDateString('en-US', { 
+                year: 'numeric', 
+                month: 'short', 
+                day: 'numeric' 
+            });
+        }
+        
+        // Helper function to get category icon
+        function getCategoryIcon(category) {
+            switch (category) {
+                case 'Web Development':
+                    return 'fa-code';
+                case 'Mobile App':
+                    return 'fa-mobile-alt';
+                case 'UI/UX Design':
+                    return 'fa-paint-brush';
+                case 'Graphic Design':
+                    return 'fa-palette';
+                default:
+                    return 'fa-folder';
+            }
+        }
+        
+        // Helper function to get category color
+        function getCategoryColor(category) {
+            return categoryColors[category] || 'gray';
+        }
+        
+        // Initialize the app when DOM is loaded
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'94118786f61a37b5',t:'MTc0NzQ2ODI4NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
